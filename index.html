@@ -1,0 +1,823 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Deséjo — Boutique Production Studio</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garant:ital,wght@0,300;0,400;1,300;1,400&family=DM+Sans:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+
+  :root {
+    --white:  #ffffff;
+    --foot:   #D8E4EC;
+    --banner: #D8E4EC;
+    --ink:    #22201C;
+    --blue:   #5B7FA0;
+    --grey:   #8C8780;
+    --pale:   #B5B0A8;
+    --border: rgba(34,32,28,.08);
+    --max:    960px;
+    --g:      32px;
+  }
+
+  *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+
+  body {
+    background: var(--white);
+    color: var(--ink);
+    font-family: 'Cormorant Garant', serif;
+    font-weight: 300;
+    font-size: 15px;
+    overflow-x: hidden;
+    cursor: none;
+  }
+
+  /* ── CURSOR: plain blue dot, no blend mode ── */
+  #cur {
+    position: fixed;
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    background: var(--blue);
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%,-50%);
+    transition: width .15s, height .15s, background .15s;
+    will-change: left, top;
+  }
+  #cur-ring {
+    position: fixed;
+    width: 32px; height: 32px;
+    border-radius: 50%;
+    border: 1px solid var(--blue);
+    pointer-events: none;
+    z-index: 9998;
+    transform: translate(-50%,-50%);
+    transition: width .2s, height .2s;
+    will-change: left, top;
+  }
+  /* Hover on interactive text: cursor grows + goes ink */
+  body.cl #cur { width: 16px; height: 16px; background: var(--ink); }
+  body.cl #cur-ring { width: 46px; height: 46px; border-color: var(--ink); }
+  /* On images: cursor stays same, no change */
+
+  /* ── TEXT HOVER INVERT ── */
+  /* nav links */
+  .nav-links a:hover { color: var(--blue) !important; }
+  /* btn */
+  .btn:hover { background: var(--blue); }
+  /* contact email */
+  .contact-email:hover { color: var(--blue); border-color: var(--blue); }
+
+  /* ── WRAPPER ── */
+  .w {
+    max-width: calc(var(--max) + var(--g)*2);
+    margin: 0 auto;
+    padding: 0 var(--g);
+  }
+
+  hr {
+    border: none;
+    border-top: 1px solid var(--border);
+    max-width: calc(var(--max) + var(--g)*2);
+    margin: 0 auto;
+  }
+
+  /* ── BANNER ── */
+  .banner {
+    background: var(--banner);
+    border-bottom: 1px solid rgba(0,0,0,.06);
+    text-align: center;
+    padding: 9px var(--g);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .62rem;
+    font-weight: 300;
+    letter-spacing: .1em;
+    color: var(--blue);
+  }
+  .banner a {
+    color: var(--ink);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+    transition: color .2s;
+  }
+  .banner a:hover { color: var(--blue); }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky; top: 0; z-index: 90;
+    background: var(--white);
+    border-bottom: 1px solid var(--border);
+    padding: 16px var(--g) 12px;
+    text-align: center;
+  }
+  .nav-logo {
+    display: block;
+    font-family: 'Monotype Corsiva', 'Apple Chancery', 'URW Chancery L', cursive;
+    font-weight: normal;
+    font-size: 1.35rem;
+    letter-spacing: .12em;
+    text-decoration: none;
+    color: var(--ink);
+    margin-bottom: 9px;
+  }
+  .nav-links {
+    display: flex;
+    justify-content: center;
+    gap: 28px;
+    list-style: none;
+  }
+  .nav-links a {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .58rem;
+    font-weight: 300;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--grey);
+    transition: color .2s;
+  }
+
+  /* ── LANDING ── */
+  .landing {
+    padding: 56px var(--g) 0;
+    max-width: calc(var(--max) + var(--g)*2);
+    margin: 0 auto;
+    text-align: center;
+  }
+
+  /* ── GALLERY (manual drag/swipe, infinite loop) ── */
+  .gallery-outer {
+    position: relative;
+    width: 100%;
+    margin-bottom: 40px;
+    overflow: hidden;
+  }
+  .gallery-scroll {
+    display: flex;
+    height: 320px;           /* fixed gallery height */
+    overflow-x: scroll;
+    overflow-y: hidden;
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: auto;   /* instant jumps for loop reset */
+    cursor: grab;
+    user-select: none;
+    /* hide scrollbar */
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .gallery-scroll::-webkit-scrollbar { display: none; }
+  .gallery-scroll.dragging { cursor: grabbing; }
+
+  .g-slide {
+    height: 100%;
+    flex-shrink: 0;
+    overflow: hidden;
+    position: relative;
+  }
+  .g-slide + .g-slide { margin-left: 6px; }
+  .g-slide img {
+    height: 100%;
+    width: auto;
+    display: block;
+    object-fit: cover;
+    pointer-events: none; /* prevent native image drag */
+    transition: transform .5s ease;
+  }
+  .g-slide:hover img { transform: scale(1.03); }
+
+  /* hint arrows on desktop */
+  .gal-hint {
+    position: absolute;
+    top: 50%; transform: translateY(-50%);
+    background: rgba(255,255,255,.75);
+    border: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    cursor: none;
+    font-size: 1rem;
+    color: var(--ink);
+    opacity: 0;
+    transition: opacity .3s;
+    z-index: 4;
+    pointer-events: all;
+  }
+  .gallery-outer:hover .gal-hint { opacity: 1; }
+  .gal-hint.left { left: 12px; }
+  .gal-hint.right { right: 12px; }
+
+  /* ── LIGHTBOX ── */
+  #lightbox {
+    display: none;
+    position: fixed; inset: 0; z-index: 1000;
+    background: rgba(22,20,18,.92);
+    align-items: center; justify-content: center;
+    padding: 24px;
+  }
+  #lightbox.open { display: flex; }
+  #lb-img {
+    max-width: 90vw;
+    max-height: 90vh;
+    object-fit: contain;
+    display: block;
+    border-radius: 1px;
+    box-shadow: 0 24px 80px rgba(0,0,0,.5);
+  }
+  #lb-close {
+    position: fixed;
+    top: 20px; right: 24px;
+    background: none; border: none;
+    color: rgba(255,255,255,.7);
+    font-size: 1.6rem;
+    cursor: none;
+    transition: color .2s;
+    line-height: 1;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #lb-close:hover { color: #fff; }
+  #lb-prev, #lb-next {
+    position: fixed;
+    top: 50%; transform: translateY(-50%);
+    background: none; border: none;
+    color: rgba(255,255,255,.6);
+    font-size: 1.8rem;
+    cursor: none;
+    padding: 0 20px;
+    transition: color .2s;
+    font-family: 'DM Sans', sans-serif;
+  }
+  #lb-prev:hover, #lb-next:hover { color: #fff; }
+  #lb-prev { left: 0; }
+  #lb-next { right: 0; }
+  #lb-caption {
+    position: fixed;
+    bottom: 24px; left: 50%;
+    transform: translateX(-50%);
+    font-family: 'DM Sans', sans-serif;
+    font-size: .6rem;
+    letter-spacing: .16em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.45);
+  }
+
+  /* ── HERO TEXT ── */
+  .hero-title {
+    font-weight: 300;
+    font-style: italic;
+    font-size: 1rem;
+    line-height: 1.75;
+    color: var(--blue);
+    max-width: 520px;
+    margin: 0 auto 28px;
+    letter-spacing: .01em;
+  }
+  .btn {
+    display: inline-block;
+    font-family: 'DM Sans', sans-serif;
+    font-size: .58rem;
+    font-weight: 300;
+    letter-spacing: .2em;
+    text-transform: uppercase;
+    text-decoration: none;
+    color: var(--white);
+    background: var(--ink);
+    padding: 12px 28px;
+    border: none;
+    cursor: none;
+    transition: background .3s;
+    margin-bottom: 64px;
+  }
+
+  /* ── SECTION ── */
+  .section {
+    padding: 64px var(--g);
+    max-width: calc(var(--max) + var(--g)*2);
+    margin: 0 auto;
+    text-align: center;
+  }
+  .eyebrow {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .55rem;
+    font-weight: 300;
+    letter-spacing: .26em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 28px;
+  }
+
+  /* ── PROJECTS ── */
+  .projects-grid {
+    display: grid;
+    grid-template-columns: repeat(5,1fr);
+    gap: 8px;
+    margin-top: 8px;
+  }
+  .proj { position: relative; overflow: hidden; }
+  .proj-thumb {
+    aspect-ratio: 3/4;
+    overflow: hidden;
+    position: relative;
+  }
+  .proj-thumb img {
+    width: 100%; height: 100%;
+    object-fit: cover; display: block;
+    transition: transform .7s cubic-bezier(.23,1,.32,1);
+  }
+  .proj:hover .proj-thumb img { transform: scale(1.06); }
+  .proj-thumb::after {
+    content: '';
+    position: absolute; inset: 0;
+    background: linear-gradient(to top, rgba(22,20,18,.65) 0%, transparent 55%);
+  }
+  .proj-label {
+    position: absolute;
+    bottom: 10px; left: 0; right: 0;
+    text-align: center; z-index: 2; padding: 0 6px;
+  }
+  .proj-title {
+    font-size: .78rem;
+    font-weight: 300;
+    color: #fff;
+    letter-spacing: .04em;
+    display: block;
+    margin-bottom: 1px;
+  }
+  .proj-loc {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .44rem;
+    letter-spacing: .14em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,.6);
+    display: block;
+  }
+
+  /* ── ABOUT ── */
+  .about-photo {
+    width: 180px;
+    margin: 0 auto 28px;
+    overflow: hidden;
+    aspect-ratio: 4/5;
+  }
+  .about-photo img {
+    width: 100%; height: 100%;
+    object-fit: cover; object-position: center top;
+    display: block;
+  }
+  .about-headline {
+    font-size: .95rem; font-weight: 300; line-height: 1.75;
+    color: var(--blue); max-width: 480px;
+    margin: 0 auto 20px; letter-spacing: .01em;
+  }
+  .about-body {
+    font-size: .88rem; line-height: 1.9; color: var(--grey);
+    max-width: 460px; margin: 0 auto;
+  }
+  .about-body p + p { margin-top: 14px; }
+
+  /* ── SERVICES ── */
+  .services-intro { max-width: 460px; margin: 0 auto 36px; }
+  .services-intro p { font-size: .92rem; line-height: 1.75; color: var(--blue); margin-bottom: 12px; }
+  .services-intro .sub {
+    font-family: 'DM Sans', sans-serif;
+    font-size: .74rem; font-weight: 300; line-height: 1.9; color: var(--grey);
+  }
+  .svc-list {
+    display: grid; grid-template-columns: repeat(3,1fr);
+    gap: 1px; background: var(--border); text-align: left; margin-top: 32px;
+  }
+  .svc { background: var(--white); padding: 32px 24px; transition: background .3s; }
+  .svc:hover { background: #F0F4F7; }
+  .svc-n { font-style: italic; font-size: .72rem; color: var(--blue); margin-bottom: 12px; display: block; }
+  .svc-title { font-size: .92rem; font-weight: 300; color: var(--ink); margin-bottom: 10px; display: block; }
+  .svc-tags { font-family: 'DM Sans', sans-serif; font-size: .66rem; font-weight: 300; line-height: 1.85; color: var(--grey); }
+
+  /* ── CONTACT ── */
+  .contact-head { font-size: .95rem; font-weight: 300; line-height: 1.75; color: var(--blue); max-width: 400px; margin: 0 auto 16px; }
+  .contact-sub { font-family: 'DM Sans', sans-serif; font-size: .74rem; font-weight: 300; line-height: 1.95; color: var(--grey); max-width: 380px; margin: 0 auto 24px; }
+  .contact-email {
+    display: inline-block; font-size: .85rem; color: var(--ink);
+    text-decoration: none; letter-spacing: .04em;
+    border-bottom: 1px solid var(--border); padding-bottom: 3px;
+    margin-bottom: 24px; transition: color .2s, border-color .2s;
+  }
+
+  /* ── FOOTER ── */
+  footer {
+    background: var(--foot);
+    border-top: 1px solid rgba(0,0,0,.06);
+    padding: 22px var(--g);
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .footer-email {
+    font-family: 'DM Sans', sans-serif; font-size: .58rem; font-weight: 300;
+    letter-spacing: .1em; color: var(--blue); text-decoration: none; transition: color .2s;
+  }
+  .footer-email:hover { color: var(--ink); }
+  .footer-centre { text-align: center; }
+  .footer-logo-text {
+    font-family: 'Monotype Corsiva', 'Apple Chancery', 'URW Chancery L', cursive;
+    font-size: .95rem; letter-spacing: .1em; color: var(--ink); opacity: .5;
+    display: block; margin-bottom: 3px;
+  }
+  .footer-copy { font-family: 'DM Sans', sans-serif; font-size: .5rem; letter-spacing: .1em; color: var(--grey); opacity: .7; }
+  .footer-insta {
+    display: flex; align-items: center; gap: 6px;
+    text-decoration: none; color: var(--blue); transition: color .2s;
+  }
+  .footer-insta:hover { color: var(--ink); }
+  .footer-insta svg { width: 15px; height: 15px; stroke: currentColor; fill: none; stroke-width: 1.4; }
+  .footer-insta span { font-family: 'DM Sans', sans-serif; font-size: .56rem; font-weight: 300; letter-spacing: .1em; text-transform: uppercase; }
+
+  /* ── REVEAL ── */
+  .r { opacity:0; transform:translateY(12px); transition: opacity .7s cubic-bezier(.23,1,.32,1), transform .7s cubic-bezier(.23,1,.32,1); }
+  .r.in { opacity:1; transform:none; }
+  .d1{transition-delay:.06s} .d2{transition-delay:.12s} .d3{transition-delay:.18s} .d4{transition-delay:.24s}
+
+  ::-webkit-scrollbar{width:1px}
+  ::-webkit-scrollbar-thumb{background:var(--blue)}
+
+  /* ── MOBILE ── */
+  @media(max-width:700px){
+    :root{--g:20px;}
+    body{cursor:auto;}
+    #cur,#cur-ring{display:none;}
+    .gallery-scroll{ height: 220px; }
+    .gal-hint { display: none; }
+    .projects-grid{ grid-template-columns:repeat(2,1fr); gap:6px; }
+    .proj:nth-child(5){ display:none; }
+    .svc-list{ grid-template-columns:1fr; }
+    footer{ flex-direction:column; gap:14px; text-align:center; }
+    #lb-prev { left: 0; padding: 0 10px; }
+    #lb-next { right: 0; padding: 0 10px; }
+  }
+  @media(max-width:420px){
+    .nav-links li:nth-child(n+3){ display:none; }
+    .gallery-scroll{ height: 180px; }
+  }
+
+  </style>
+</head>
+<body>
+
+<!-- CURSOR -->
+<div id="cur"></div>
+<div id="cur-ring"></div>
+
+<!-- LIGHTBOX -->
+<div id="lightbox">
+  <button id="lb-close">&#x2715;</button>
+  <button id="lb-prev">&#8249;</button>
+  <img id="lb-img" src="" alt="">
+  <button id="lb-next">&#8250;</button>
+  <span id="lb-caption"></span>
+</div>
+
+<!-- BANNER -->
+<div class="banner">
+  Want to know where we are heading next? <a href="#contact">Sign up to our newsletter</a>
+</div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">Deséjo</a>
+  <ul class="nav-links">
+    <li><a href="#projects">Projects</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#services">Services</a></li>
+    <li><a href="#contact">Contact</a></li>
+  </ul>
+</nav>
+
+<!-- LANDING -->
+<div class="landing">
+
+  <!-- MANUAL DRAG GALLERY -->
+  <div class="gallery-outer r">
+    <button class="gal-hint left" id="gal-left">&#8249;</button>
+    <button class="gal-hint right" id="gal-right">&#8250;</button>
+
+    <!-- 
+      Triple set for seamless infinite loop in both directions.
+      Start = Rogue Season. Order: RS, RS, CCV, CCV, Cleonie, Cleonie, Inbluem, Inbluem, SL, SL
+    -->
+    <div class="gallery-scroll" id="gallery">
+
+      <!-- SET A (clone, allows left scroll) -->
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=1500w" alt="San Lorenzo"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=1500w" alt="San Lorenzo"></div>
+
+      <!-- SET B (main, user starts here) -->
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=1500w" alt="San Lorenzo"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=1500w" alt="San Lorenzo"></div>
+
+      <!-- SET C (clone, allows right scroll loop) -->
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/536bf0bd-9e16-4f95-b709-1764827a9d74/ROGUE+SEASON+SUMB+PHOTOS+_+52.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=2500w" data-caption="Rogue Season — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=1500w" alt="Rogue Season"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=2500w" data-caption="Ciao Ciao Vacation — Tokyo"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/bc77ab60-f25e-43af-ac04-eef8e043327c/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-174.jpg?format=1500w" alt="Ciao Ciao Vacation"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=2500w" data-caption="Cleonie — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5bbd30d3-bbf5-4e6a-b99c-ee79be1bebb3/vyMPclhw.jpg?format=1500w" alt="Cleonie"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=2500w" data-caption="Inbluem — Sumba"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/79b361af-6132-4c34-b8e7-d26334fe1600/INBLUEM_FILM_1.jpg?format=1500w" alt="Inbluem"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=1500w" alt="San Lorenzo"></div>
+      <div class="g-slide" data-src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=2500w" data-caption="San Lorenzo — Sydney"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/77135f8b-44f4-4210-aa15-960d7afe02a6/SAN+LORENZO+_+BALI+_+31.jpg?format=1500w" alt="San Lorenzo"></div>
+
+    </div>
+  </div>
+
+  <p class="hero-title r d1">
+    Deséjo is a production studio creating filmic, nostalgic campaigns for fashion &amp; beauty.
+    Born on the coastline of Australia, working worldwide.
+  </p>
+  <a href="#contact" class="btn r d2">Work with us</a>
+</div>
+
+<hr>
+
+<!-- PROJECTS -->
+<div class="section" id="projects">
+  <p class="eyebrow r">Projects</p>
+  <div class="projects-grid">
+    <div class="proj r">
+      <div class="proj-thumb"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/d6d8e45e-ce68-4988-9b8a-1c5e09b66de7/EMILIODUMAR_CCV_SHIBUYA_PHOTOS-33.jpg?format=1500w" alt="Ciao Ciao Vacation" loading="lazy"></div>
+      <div class="proj-label"><span class="proj-title">Ciao Ciao Vacation</span><span class="proj-loc">Tokyo, Japan</span></div>
+    </div>
+    <div class="proj r d1">
+      <div class="proj-thumb"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/c53d40b8-d527-42ef-9518-9d8806c0abb4/CLEONIE+_+SUMBA+_+45.jpg?format=1500w" alt="Cleonie" loading="lazy"></div>
+      <div class="proj-label"><span class="proj-title">Cleonie</span><span class="proj-loc">Sumba, Indonesia</span></div>
+    </div>
+    <div class="proj r d2">
+      <div class="proj-thumb"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/cb871bfd-16dc-4268-ad6d-ac29839663cd/INBLUEM_FILM_14.jpg?format=1500w" alt="Inbluem" loading="lazy"></div>
+      <div class="proj-label"><span class="proj-title">Inbluem</span><span class="proj-loc">Sumba, Indonesia</span></div>
+    </div>
+    <div class="proj r d3">
+      <div class="proj-thumb"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/5cff4a6b-ece0-499c-80df-13531d18cb11/EMILIODUMAR_SANLORENZO_CRISTIANA_-131.jpg?format=1500w" alt="San Lorenzo" loading="lazy"></div>
+      <div class="proj-label"><span class="proj-title">San Lorenzo</span><span class="proj-loc">Sydney, Australia</span></div>
+    </div>
+    <div class="proj r d4">
+      <div class="proj-thumb"><img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/659ee284-524e-4247-979e-c89dfebecd1b/ROGUE+SEASON+SUMB+PHOTOS+_+49.jpg?format=1500w" alt="Rogue Season" loading="lazy"></div>
+      <div class="proj-label"><span class="proj-title">Rogue Season</span><span class="proj-loc">Sumba, Indonesia</span></div>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- ABOUT -->
+<div class="section" id="about">
+  <p class="eyebrow r">About</p>
+  <div class="about-photo r d1">
+    <img src="https://images.squarespace-cdn.com/content/v1/64d1bcf0cf0c2750aad95072/4e0f18b9-a462-49ca-a173-5cf7c46ba851/Screenshot+2025-11-22+at+2.17.40%E2%80%AFpm.png" alt="Emilio Dümar">
+  </div>
+  <p class="about-headline r d2">Founded by Emilio Dümar, Melbourne-based photographer.</p>
+  <div class="about-body r d3">
+    <p>Deséjo began on the salt-washed coastline of Australia. What started as a personal approach to image-making has grown into a full-scale production studio working with brands globally.</p>
+    <p>At its core, Deséjo is built on one thing. Creating work that feels real.</p>
+  </div>
+</div>
+
+<hr>
+
+<!-- SERVICES -->
+<div class="section" id="services">
+  <p class="eyebrow r">Services</p>
+  <div class="services-intro r d1">
+    <p>An end-to-end production studio for fashion &amp; beauty brands.</p>
+    <p class="sub">Stills, motion &amp; digital content, all seamlessly done in one production.</p>
+  </div>
+  <div class="svc-list r d2">
+    <div class="svc">
+      <span class="svc-n">01</span>
+      <span class="svc-title">Creative Production</span>
+      <p class="svc-tags">Campaign Concepting · Creative Direction · Location Scouting · Casting &amp; Talent · Full Production Management</p>
+    </div>
+    <div class="svc">
+      <span class="svc-n">02</span>
+      <span class="svc-title">Photography &amp; Motion</span>
+      <p class="svc-tags">Campaign Photography · Editorial · Lookbook · Film &amp; Motion · UGC Content · Behind the Scenes</p>
+    </div>
+    <div class="svc">
+      <span class="svc-n">03</span>
+      <span class="svc-title">Line Producing</span>
+      <p class="svc-tags">Budgeting · Vendor Management · Location Permits · Travel Coordination · Post Production · Delivery</p>
+    </div>
+  </div>
+</div>
+
+<hr>
+
+<!-- CONTACT -->
+<div class="section" id="contact">
+  <p class="eyebrow r">Contact</p>
+  <p class="contact-head r d1">Tell us about your next project.</p>
+  <p class="contact-sub r d2">Every great campaign starts with a conversation. Whether you have a full brief or just an idea, reach out and we will get back to you within 24 hours.</p>
+  <a href="mailto:hello@desejo.world" class="contact-email r d3">hello@desejo.world</a>
+  <br>
+  <a href="mailto:hello@desejo.world?subject=Project%20Enquiry" class="btn r d3" style="margin-top:20px;margin-bottom:0;">Work with us</a>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <a href="mailto:hello@desejo.world" class="footer-email">hello@desejo.world</a>
+  <div class="footer-centre">
+    <span class="footer-logo-text">Deséjo</span>
+    <span class="footer-copy">© Deséjo, Australia</span>
+  </div>
+  <a href="https://www.instagram.com" target="_blank" class="footer-insta">
+    <svg viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="1.2" fill="currentColor" stroke="none"/></svg>
+    <span>Instagram</span>
+  </a>
+</footer>
+
+<script>
+/* ── CURSOR ── */
+const cur  = document.getElementById('cur');
+const ring = document.getElementById('cur-ring');
+let rx=0,ry=0,mx=0,my=0;
+
+document.addEventListener('mousemove', e => {
+  mx = e.clientX; my = e.clientY;
+  cur.style.left = mx+'px'; cur.style.top = my+'px';
+});
+(function tick(){
+  rx += (mx-rx)*.18; ry += (my-ry)*.18;
+  ring.style.left = rx+'px'; ring.style.top = ry+'px';
+  requestAnimationFrame(tick);
+})();
+
+// Text elements trigger cursor colour change, images do NOT
+const textEls = document.querySelectorAll('a:not(.g-slide a), button:not(.gal-hint), .btn');
+textEls.forEach(el => {
+  el.addEventListener('mouseenter', () => document.body.classList.add('cl'));
+  el.addEventListener('mouseleave', () => document.body.classList.remove('cl'));
+});
+
+/* ── GALLERY: drag + seamless infinite loop ── */
+const gallery = document.getElementById('gallery');
+const SLIDE_COUNT = 10; // images per set
+let setWidth = 0;
+let isDragging = false;
+let startX = 0;
+let startScroll = 0;
+let dragMoved = false;
+let clickedSlide = null;
+
+function calcSetWidth() {
+  const slides = gallery.querySelectorAll('.g-slide');
+  let w = 0;
+  for (let i = 0; i < SLIDE_COUNT; i++) {
+    w += slides[i].offsetWidth + 6; // +6 for margin-left gap
+  }
+  return w;
+}
+
+function initGallery() {
+  setWidth = calcSetWidth();
+  // Start at set B (index 10 = second set)
+  gallery.scrollLeft = setWidth;
+}
+
+// Wait for images to have some width
+window.addEventListener('load', initGallery);
+setTimeout(initGallery, 300);
+
+// Seamless loop on scroll
+gallery.addEventListener('scroll', () => {
+  if (!setWidth) return;
+  if (gallery.scrollLeft <= 2) {
+    gallery.scrollLeft = setWidth + gallery.scrollLeft;
+  } else if (gallery.scrollLeft >= setWidth * 2 - 2) {
+    gallery.scrollLeft = gallery.scrollLeft - setWidth;
+  }
+}, { passive: true });
+
+// Mouse drag
+gallery.addEventListener('mousedown', e => {
+  isDragging = true;
+  dragMoved = false;
+  startX = e.pageX;
+  startScroll = gallery.scrollLeft;
+  clickedSlide = e.target.closest('.g-slide');
+  gallery.classList.add('dragging');
+  e.preventDefault();
+});
+window.addEventListener('mousemove', e => {
+  if (!isDragging) return;
+  const dx = e.pageX - startX;
+  if (Math.abs(dx) > 4) dragMoved = true;
+  gallery.scrollLeft = startScroll - dx;
+});
+window.addEventListener('mouseup', e => {
+  if (!isDragging) return;
+  isDragging = false;
+  gallery.classList.remove('dragging');
+  // If barely moved = click = open lightbox
+  if (!dragMoved && clickedSlide) {
+    openLightbox(clickedSlide);
+  }
+});
+
+// Arrow buttons
+document.getElementById('gal-left').addEventListener('click', () => {
+  gallery.scrollBy({ left: -320, behavior: 'smooth' });
+});
+document.getElementById('gal-right').addEventListener('click', () => {
+  gallery.scrollBy({ left: 320, behavior: 'smooth' });
+});
+
+/* ── LIGHTBOX ── */
+const lb      = document.getElementById('lightbox');
+const lbImg   = document.getElementById('lb-img');
+const lbCap   = document.getElementById('lb-caption');
+const lbClose = document.getElementById('lb-close');
+const lbPrev  = document.getElementById('lb-prev');
+const lbNext  = document.getElementById('lb-next');
+
+// Collect unique slides (10 per set, use set B = slides 10-19)
+let lbSlides = [];
+let lbIndex  = 0;
+
+function buildLightboxSlides() {
+  const all = gallery.querySelectorAll('.g-slide');
+  // Use set B (slides index 10 to 19)
+  for (let i = 10; i < 20; i++) {
+    lbSlides.push(all[i]);
+  }
+}
+window.addEventListener('load', buildLightboxSlides);
+setTimeout(buildLightboxSlides, 300);
+
+function openLightbox(slide) {
+  // Find which slide in set B matches (by src)
+  const src = slide.dataset.src;
+  let idx = lbSlides.findIndex(s => s.dataset.src === src);
+  if (idx === -1) idx = 0;
+  lbIndex = idx;
+  showLbSlide();
+  lb.classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function showLbSlide() {
+  const s = lbSlides[lbIndex];
+  if (!s) return;
+  lbImg.src = s.dataset.src;
+  lbCap.textContent = s.dataset.caption || '';
+}
+
+lbClose.addEventListener('click', closeLb);
+lb.addEventListener('click', e => { if (e.target === lb) closeLb(); });
+lbPrev.addEventListener('click', () => { lbIndex = (lbIndex - 1 + lbSlides.length) % lbSlides.length; showLbSlide(); });
+lbNext.addEventListener('click', () => { lbIndex = (lbIndex + 1) % lbSlides.length; showLbSlide(); });
+document.addEventListener('keydown', e => {
+  if (!lb.classList.contains('open')) return;
+  if (e.key === 'Escape') closeLb();
+  if (e.key === 'ArrowLeft') { lbIndex = (lbIndex - 1 + lbSlides.length) % lbSlides.length; showLbSlide(); }
+  if (e.key === 'ArrowRight') { lbIndex = (lbIndex + 1) % lbSlides.length; showLbSlide(); }
+});
+
+function closeLb() {
+  lb.classList.remove('open');
+  document.body.style.overflow = '';
+  lbImg.src = '';
+}
+
+// Touch: lightbox swipe left/right
+let lbTouchX = 0;
+lb.addEventListener('touchstart', e => { lbTouchX = e.touches[0].clientX; }, { passive: true });
+lb.addEventListener('touchend', e => {
+  const dx = e.changedTouches[0].clientX - lbTouchX;
+  if (Math.abs(dx) > 40) {
+    if (dx < 0) { lbIndex = (lbIndex + 1) % lbSlides.length; }
+    else        { lbIndex = (lbIndex - 1 + lbSlides.length) % lbSlides.length; }
+    showLbSlide();
+  } else if (Math.abs(dx) < 5) { closeLb(); }
+});
+
+/* ── REVEAL ── */
+const obs = new IntersectionObserver(entries => {
+  entries.forEach(e => { if(e.isIntersecting){ e.target.classList.add('in'); obs.unobserve(e.target); } });
+}, { threshold: 0.07 });
+document.querySelectorAll('.r').forEach(el => obs.observe(el));
+</script>
+</body>
+</html>
