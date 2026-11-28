@@ -1527,3 +1527,6 @@ main:has(> .pc-wrap:last-child) + .foot { margin-top: 0; }
 .mark .fill { --m: url(../shared/logo-hi.png); }
 .home .hdr-c .mark { will-change: auto; animation: none; }
 .home:not(.scrolled) .hdr-c .mark { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .22)); }
+
+/* Residency hero slogan in the serif (28/11/2026) */
+.banner-title .serif-slogan { font-family: var(--serif); font-style: italic; font-weight: 300; font-size: clamp(26px, 2.4vw, 38px); letter-spacing: -.005em; margin-top: 18px; }
