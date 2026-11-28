@@ -1545,3 +1545,21 @@ main:has(> .pc-wrap:last-child) + .foot { margin-top: 0; }
 .limited p:not(.caps) { font-size: 15px; line-height: 1.6; max-width: 58ch; }
 .limited p + p { margin-top: .8em; }
 @media (max-width: 760px) { .limited { grid-template-columns: 1fr; } }
+
+/* Residency: offerings as four tidy points (28/11/2026) */
+.off-head { grid-template-columns: minmax(0, .8fr) minmax(0, 2fr); }
+.off-points { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 30px 48px; }
+.off-points .pt { border-top: 1px solid var(--line); padding-top: 14px; }
+.off-points .caps { font-size: 11px; font-weight: 700; letter-spacing: .16em; color: var(--blue); margin-bottom: 8px; }
+.off-points .pt p:not(.caps) { font-size: 15px; line-height: 1.6; max-width: 46ch; }
+@media (max-width: 900px) { .off-head { grid-template-columns: 1fr; } }
+@media (max-width: 600px) { .off-points { grid-template-columns: 1fr; gap: 22px; } }
+
+/* Residency: the sign-up section gets its own full-width band */
+.sec.join {
+  background: var(--grain), #F1DCE0;
+  margin-top: clamp(90px, 13vh, 150px);
+  padding: clamp(70px, 11vh, 130px) 0;
+}
+.join .join-kicker { font-size: 11px; font-weight: 700; letter-spacing: .18em; color: var(--blue); margin-bottom: 12px; }
+.join .lead-print { box-shadow: 0 12px 30px rgba(60, 20, 30, .18), 0 1px 3px rgba(20, 24, 40, .12); }
