@@ -1519,3 +1519,11 @@ main:has(> .pc-wrap:last-child) + .foot { margin-top: 0; }
   .season { grid-template-columns: 1fr; }
   .season img { min-height: 0; aspect-ratio: 4 / 3; height: auto; }
 }
+
+/* ═══ SHARP WORDMARK (28/11/2026) ═══
+   One high-res, fully opaque mask (2x the old one, smaller file), preloaded in the head.
+   The big home logo is no longer a 40px layer stretched 8x: without will-change the
+   browser redraws it at its real size every frame, so the edges stay crisp. No blur-in. */
+.mark .fill { --m: url(../shared/logo-hi.png); }
+.home .hdr-c .mark { will-change: auto; animation: none; }
+.home:not(.scrolled) .hdr-c .mark { filter: drop-shadow(0 2px 14px rgba(0, 0, 0, .22)); }
